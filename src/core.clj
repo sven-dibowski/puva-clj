@@ -1,40 +1,49 @@
 (ns core)
 
-(def places (atom 10))
+;; number of available parking slots
+(def slots (atom 10))
 
-(defn enter-garage []
-  (when (> 0 @places)
-    (swap! places dec ))
-  (println "Es sind noch " @places " Plätze übrig"))
+(defn- remaining-slots 
+  "print the value of remaining parking slots"
+  []
+  (println (format "-------------------[%-2d slots left]" @slots)))
 
-(defn leave-garage []
-  (swap! places inc)
-  (println "Es sind " @places " Plätze frei."))
+(defn enter-garage   
+  [name]
+  (if (> @slots 0)
+    (do (swap! slots dec)
+        (println name ":-> entered")
+        (remaining-slots)
+        :parking)
+    (do
+      (println (format "%-2d: couldn't enter" (Integer. name)))
+      :driving)))
+
+(defn leave-garage   
+  [name]
+  (swap! slots inc)
+  (println name ":<- left")
+  (remaining-slots))
 
 (defn car
-  [name]
-  (while true
-    ;; (println name ": --start")
-    (Thread/sleep (rand-int 10000))
-    (enter-garage)
-    (println name ": eingefahren")
-    (Thread/sleep (rand-int 20000))
-    (leave-garage )
-    (println name ": ausgefahren")
-    ))
+  [id state]
+  (loop [state state]
+    (if  (= state :driving)
+      (do
+        (Thread/sleep (rand-int 3000))
+        (recur (enter-garage id)))
+      (do
+        (Thread/sleep (rand-int 10000))
+        (leave-garage id)
+        (recur :driving)))))
 
-(defn main
-  []
-  ;; parking garage erzeugen
-
-  ;; n autos erzeugen und garage übergeben
+(defn main 
+  "Create n cars and init the program"
+  [n]
   (loop [x 1]
-    (future (car (str x)))
-    (when (< x 40)
-      (recur (inc x)))
-))
+    (future (car (str x) :driving))
+    (when (< x n)
+      (recur (inc x)))))
 
-
-(comment   
-  (main)
-  )
+(comment  
+  (main 40))

@@ -37,13 +37,13 @@
         (leave-garage id)
         (recur :driving)))))
 
-(defn main 
+(defn -main 
   "Create n cars and init the program"
   [n]
   (loop [x 1]
     (future (car (str x) :driving))
-    (when (< x n)
+    (when (< x (Integer. n))
       (recur (inc x)))))
 
 (comment  
-  (main 40))
+  (-main 40))
